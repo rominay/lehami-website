@@ -133,14 +133,16 @@
       parameters or action sequence.</p>
 
     <p><span class="lead">The results</span>
-      On conservative and actuated visual pendulum environments, <b class="nm">LeHami</b> preserves latent volume along the rollout,
-      whereas LeWM (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>), the unconstrained JEPA
-      world model we compare to, contracts it steadily. Consistent with this, <b class="nm">LeHami</b> predicts velocity better
-      throughout and angle better at long horizons. The learned flow also supports integration at unseen
-      sub-frame step sizes and numerical time reversal. With actuation, <b class="nm">LeHami</b> captures the full state, angle and
-      signed velocity alike, by construction, paving the way towards velocity-constrained planning and
-      FLOP-efficient replanning. These results show how geometric structure can provide inference-time
-      guarantees that are complementary to representation regularization in latent world models.</p>
+      On the conservative pendulum, <b class="nm">LeHami</b> preserves latent volume along the rollout, whereas LeWM
+      (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>), the unconstrained JEPA world model we
+      compare to, contracts it steadily, losing log-volume linearly with the horizon. Consistent with this,
+      <b class="nm">LeHami</b> predicts velocity better throughout and angle better at long horizons. The learned flow
+      also supports accurate integration at unseen sub-frame step sizes and numerical time reversal. On the
+      actuated pendulum, LeWM reaches the goal angle more often, but it captures signed velocity only when its
+      temporal window is explicitly untied. <b class="nm">LeHami</b> instead captures the full state, angle and signed
+      velocity alike, by construction, paving the way towards velocity-constrained planning and FLOP-efficient
+      replanning. These results show how geometric structure can provide inference-time guarantees that are
+      complementary to representation regularization in latent world models.</p>
   </div>
   <div class="tldr">
     <span class="title">Contributions</span>
@@ -385,15 +387,16 @@
     (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>) over the first ten rollout steps.
   </p>
   <p>
-    The right panel tracks the <b>cumulative log-volume</b> of the one-step map, (1/<i>n</i>)
-    &Sigma;<sub><i>i</i>=0..<i>K</i>&minus;1</sub> log|det <i>J</i>(<b>z</b><sub><i>i</i></sub>)|, where
-    <i>J</i> is the Jacobian of the one-step predictor and <i>n</i> is the latent dimension. The determinant of
-    <i>J</i> is the factor by which the map scales a small volume of latent states: above 1 it expands, below 1
-    it contracts, and exactly 1 it preserves volume. Taking the logarithm turns the product of these factors
-    along the rollout into a running sum, so the curve reads as the total volume change accumulated up to step
-    <i>K</i>, per latent dimension. For <b class="nm">LeHami</b> the curve is exactly 0 (|det <i>J</i>| = 1 at every state), so
-    there is no contraction. For LeWM it declines steadily and linearly, which means every step shrinks the
-    latent volume a little more.
+    To assess whether <b class="nm">LeHami</b> avoids representation collapse over long horizons, we directly evaluate the
+    phase-space volume contraction of the latent predictor during rollouts. The right panel tracks the
+    normalized <b>cumulative log-determinant</b> across a <i>K</i>-step rollout,
+    (1/<i>n</i>) &Sigma;<sub><i>i</i>=0..<i>K</i>&minus;1</sub> log|det <i>J</i>(<b>z</b><sub><i>i</i></sub>)|, where
+    <i>J</i>(<b>z</b><sub><i>i</i></sub>) denotes the Jacobian of the one-step predictor and <i>n</i> is the latent
+    dimension. This quantity directly measures phase-space volume change under iterated predictions.
+    <b class="nm">LeHami</b> maintains an exactly constant value of 0 (|det <i>J</i>(<b>z</b><sub><i>i</i></sub>)| = 1 for all
+    <b>z</b><sub><i>i</i></sub>), avoiding rollout volume contraction. Conversely, LeWM exhibits a steady linear
+    decline in cumulative log-volume, indicating continuous contraction during rollout; the same holds for the
+    full phase-space volume of its three-embedding context.
   </p>
   <figure>
     <img src="assets/physics_rollout.png" alt="Rollout error in angle and velocity, and cumulative log-volume, for LeHami and LeWM" loading="lazy">
@@ -405,14 +408,17 @@
   </figure>
 
   <p>
-    The animation below shows where this curve comes from. At each rollout step, a unit disc of small latent
-    perturbations around the current state is pushed through the one-step map. Since the map acts locally
-    through its Jacobian, the disc comes out as an ellipse whose two axes are the largest and smallest singular
-    values of that Jacobian, averaged over 45 test episodes. The area of the ellipse relative to the disc is
-    the volume change of the step. For <b class="nm">LeHami</b> the product of the two axes is 1: the disc is stretched one way and
-    squeezed the other, with its area preserved. For LeWM the smallest singular value is essentially zero, so
-    the map flattens the disc onto a line at every step. The curve at the bottom accumulates the logarithm of
-    this change over the rollout, which is the same cumulative log-volume as in the figure above.
+    The animation below shows where this curve comes from. A single latent state cannot collapse, since it
+    simply moves to another point; collapse means that many distinct states get merged. So at each rollout step
+    we take a small disc of nearby latent states around the current state (dashed circle) and apply the
+    one-step map to every point of it. Because the disc is small, the map acts on it through its Jacobian
+    <i>J</i>, which turns the disc into an ellipse (filled). The axes of the ellipse are the singular values
+    of <i>J</i>, and its area relative to the disc is |det <i>J</i>|, the product of those singular values. For
+    <b class="nm">LeHami</b>, |det <i>J</i>| = 1: the disc is stretched in one direction and squeezed in another, but its area
+    is preserved, so nearby states stay distinguishable. For LeWM, the smallest singular value is essentially
+    zero, so |det <i>J</i>| &approx; 0 and the disc is flattened onto a line at every step, merging distinct
+    states. The curve at the bottom accumulates log|det <i>J</i>| over the rollout, which is the same cumulative
+    log-volume as in the figure above. Values are averaged over 45 test episodes.
   </p>
   <figure>
     <img src="assets/gif_volume.gif" alt="A unit disc mapped to an ellipse of equal area by LeHami and to a flat line by LeWM, with cumulative log-volume below" loading="lazy">
