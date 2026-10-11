@@ -37,26 +37,30 @@
   .btn:hover { text-decoration: none; opacity: 0.88; }
   .btn.disabled { background: transparent; color: var(--muted); border: 1px dashed var(--line); cursor: default; }
   section { padding: 34px 0; border-top: 2px solid var(--gold); }
-  h2 { font-size: 1.55rem; margin: 0 0 14px; letter-spacing: -0.01em; color: var(--navy); }
+  h2 { font-size: 1.9rem; margin: 0 0 14px; letter-spacing: -0.01em; color: var(--navy); }
   h2::after { content: ""; display: block; width: 44px; height: 3px; background: var(--gold); margin-top: 6px; border-radius: 2px; }
-  h3 { font-size: 1.12rem; margin: 26px 0 6px; }
+  h3 { font-size: 1.5rem; margin: 30px 0 8px; color: var(--navy); }
+  .hl { color: var(--accent); font-weight: 700; }
+  td b.nm { color: inherit; }
   p { margin: 0 0 16px; }
   figure { margin: 24px 0; }
   figure img { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
   figcaption { color: var(--muted); font-size: 0.92rem; margin-top: 8px; }
   .abstract { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 22px 26px 8px; }
   .abstract p { margin-bottom: 18px; }
-  .abstract .lead { display: block; font-size: 0.78rem; letter-spacing: 0.08em; text-transform: uppercase;
+  .abstract .lead { display: block; font-size: 1.2rem; letter-spacing: 0.06em; text-transform: uppercase;
                     color: var(--accent); font-weight: 700; margin-bottom: 2px; }
   .tldr { background: var(--tldr); border-left: 4px solid var(--gold); border-radius: 6px; padding: 14px 20px; margin: 18px 0 0; }
-  .tldr b { color: var(--navy); letter-spacing: 0.04em; }
+  .tldr .title { color: var(--navy); font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.95rem; }
+  .tldr ul { margin: 8px 0 0; padding-left: 1.2em; }
+  .tldr li { margin-bottom: 10px; }
   .props { display: grid; gap: 22px; margin: 18px 0; }
   .prop { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px; align-items: center; }
   .prop img { width: 100%; height: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
-  .prop h3 { margin-top: 0; }
+  .prop h3 { margin-top: 0; font-size: 1.25rem; }
   .prop p { margin: 0; }
   .eq { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px 16px; overflow-x: auto;
-        font: 0.95rem/1.7 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 14px 0; }
+        font: 1.3rem/1.9 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; margin: 14px 0; }
   .swatch { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 5px; vertical-align: baseline; }
   .tablewrap { overflow-x: auto; margin: 18px 0; }
   table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
@@ -69,7 +73,7 @@
   .steps { padding-left: 1.2em; }
   .steps li { margin-bottom: 8px; }
   pre { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto;
-        font-size: 0.85rem; line-height: 1.5; }
+        font-size: 1.05rem; line-height: 1.55; }
   code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 0.92em; }
   footer { border-top: 1px solid var(--line); padding: 26px 0 48px; color: var(--muted); font-size: 0.9rem; text-align: center; }
   @media (max-width: 640px) { .prop { grid-template-columns: 1fr; } }
@@ -104,32 +108,57 @@
   <div class="abstract">
     <p><span class="lead">The problem</span>
       Joint-embedding predictive architectures (JEPAs) learn world models directly in latent space, but
-      unconstrained autoregressive predictors may contract the latent distribution over long rollouts.</p>
+      unconstrained autoregressive predictors may contract the latent distribution over long rollouts.
+      This contraction is a form of collapse, and it is a problem because each prediction is fed back as the
+      next input: even a slight per-step contraction compounds over the horizon, progressively shrinking the
+      latent distribution until distinct states can no longer be told apart.</p>
 
     <p><span class="lead">The method</span>
       We introduce Symplectic Hamiltonian JEPA (<b>LeHami</b>), which replaces the standard predictor with an
-      action-conditioned Hamiltonian flow over a structured latent state (<i>q</i>, <i>p</i>) integrated using an
+      action-conditioned Hamiltonian flow over a structured latent state (<b><i>q</i></b>, <b><i>p</i></b>) integrated using an
       exactly symplectic leapfrog step. We obtain the momentum-like component from temporal derivatives of the
-      learned position-like representation, providing an explicit second-order state for prediction and control.</p>
+      learned position-like representation, providing an explicit second-order state for prediction and control.
+      The idea comes from physics, where Hamiltonian mechanics governs dynamics through a single scalar
+      <i>H</i> and preserves phase-space volume at every step. Machine-learning methods have since learned the
+      Hamiltonian from data, such as Hamiltonian Neural Networks
+      (<a href="https://arxiv.org/abs/1906.01563">Greydanus et al., 2019</a>), Symplectic ODE-Net
+      (<a href="https://arxiv.org/abs/1909.12077">Chen et al., 2019</a>) and Hamiltonian Generative Networks
+      (<a href="https://arxiv.org/abs/1909.13789">Toth et al., 2019</a>). <b>LeHami</b> brings this prior to JEPA
+      world models, learned end to end from pixels and integrated exactly symplectically.</p>
 
     <p><span class="lead">The guarantee</span>
-      This construction preserves phase-space volume at every rollout step and rules out uniform contraction,
+      Because the leapfrog step is symplectic, this construction preserves phase-space volume at every rollout
+      step as a consequence. This tackles the problem of collapse directly: it rules out uniform contraction,
       asymptotically stable fixed points, and merging of distinct latent states, independently of the learned
       parameters or action sequence.</p>
 
     <p><span class="lead">The results</span>
-      On conservative and actuated visual pendulum environments, LeHami substantially improves long-horizon
-      velocity prediction over an unconstrained JEPA world model and empirically maintains constant latent volume
-      where the baseline contracts. The learned flow also supports accurate integration at unseen sub-frame step
-      sizes and numerical time reversal. These results show how geometric structure can provide inference-time
+      On conservative and actuated visual pendulum environments, <b class="nm">LeHami</b> preserves latent volume along the rollout,
+      whereas LeWM (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>), the unconstrained JEPA
+      world model we compare to, contracts it steadily. Consistent with this, <b class="nm">LeHami</b> predicts velocity better
+      throughout and angle better at long horizons. The learned flow also supports integration at unseen
+      sub-frame step sizes and numerical time reversal. With actuation, <b class="nm">LeHami</b> captures the full state, angle and
+      signed velocity alike, by construction, paving the way towards velocity-constrained planning and
+      FLOP-efficient replanning. These results show how geometric structure can provide inference-time
       guarantees that are complementary to representation regularization in latent world models.</p>
   </div>
   <div class="tldr">
-    <b>TL;DR</b>&nbsp; Give a JEPA's latent space the structure of a physical phase space. LeHami predicts with a
-    Hamiltonian flow over (<i>q</i>, <i>p</i>), so latent volume is preserved by construction, long-horizon
-    velocity prediction improves, and the model can be integrated at unseen step sizes and run backward in time.
-    It also plans with a smaller and cheaper predictor, though it does not yet match the best unconstrained
-    baseline's goal-reaching success.
+    <span class="title">Contributions</span>
+    <ul>
+      <li><b>Symplectic latent world model (LeHami):</b> We introduce an end-to-end trainable JEPA framework
+        equipped with a learned separable Hamiltonian predictor over a canonical latent split
+        (<b><i>q</i></b>, <b><i>p</i></b>). We prove that its volume-preserving step eliminates three specific collapse modes
+        during evaluation rollouts across arbitrary horizons and actions.</li>
+      <li><b>Continuous-time &amp; time reversibility:</b> We show that a single trained predictor
+        <i>H</i><sub>&phi;</sub> acts as a continuous vector field, enabling sub-frame time integration without
+        performance degradation and achieving numerical time-reversal with round-trip error below
+        10<sup>&minus;4</sup>&nbsp;% without architectural modifications.</li>
+      <li><b>Complete physics representation &amp; principled planning:</b> By construction rather than by
+        architectural tuning, <b class="nm">LeHami</b> represents the full state through exact geometric structure. Across
+        conservative and actuated pendulum environments, we empirically show that <b class="nm">LeHami</b> accurately recovers
+        full system dynamics. This paves the way towards compute-efficient planning to goals that specify the
+        full physical state: position and velocity.</li>
+    </ul>
   </div>
 </section>
 
@@ -138,21 +167,26 @@
   <p>
     Think of a pendulum. Its angle alone does not tell you what happens next: you also need how fast it is
     swinging. Physics bundles the two into a <b>phase space</b>, a position-like coordinate
-    <b><i>q</i></b> and a momentum-like coordinate <b><i>p</i></b>, and the motion is a smooth flow through that
-    space along the level sets of an energy function <i>H</i>.
+    <b><i>q</i></b> and a momentum-like coordinate <b><i>p</i></b>, and the motion is a flow through that
+    space generated by a single scalar <i>H</i>. What matters for us is not that this flow conserves
+    something, but that it is <span class="hl">symplectic</span>: it preserves the oriented area spanned in
+    each (<b><i>q</i></b>, <b><i>p</i></b>) plane, and with it phase-space volume at every step. A cloud of
+    states can be stretched and sheared, but never squeezed. Crucially, this persists under actuation, provided
+    the action enters the Hamiltonian.
   </p>
   <p>
-    A standard JEPA world model has no such structure. It encodes a frame into a vector and an unconstrained
-    network predicts the next vector. Nothing stops that network from squeezing the latent space a little at
-    every step; over a long rollout the squeeze compounds, distinct states drift together and the information
-    that told them apart is gone.
+    A predictor without structure takes a latent state and evolves it to the next state. Nothing stops that
+    network from squeezing the latent space a little at every step; over a long rollout the squeeze compounds,
+    distinct states drift together and the information that told them apart is gone.
   </p>
   <p>
-    LeHami gives the latent space the phase-space structure directly. The encoder maps each frame to a point
-    (<i>q</i>, <i>p</i>), and the predictor is a learned Hamiltonian
-    <i>H</i><sub>&phi;</sub> = <i>K</i><sub>&phi;</sub>(<i>p</i>) + <i>V</i><sub>&phi;</sub>(<i>q</i>, <i>u</i>)
-    advanced by a leapfrog step. The action <i>u</i> enters through the potential, so a torque literally tilts
-    the energy landscape the state moves on.
+    <b class="nm">LeHami</b> gives the latent space a <span class="hl">symplectic</span> phase-space structure directly. The
+    encoder maps each frame to a point (<b><i>q</i></b>, <b><i>p</i></b>), and the predictor is a learned
+    Hamiltonian <i>H</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>p</i></b>, <b><i>u</i></b>) =
+    <i>K</i><sub>&phi;</sub>(<b><i>p</i></b>) + <i>V</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>u</i></b>),
+    where <b><i>u</i></b> is the control action vector (for the pendulum, the applied torque), advanced by a
+    leapfrog step. The action enters through the potential, so a torque literally tilts the energy landscape
+    the state moves on.
   </p>
 
   <figure style="max-width:78%; margin-left:auto; margin-right:auto">
@@ -160,49 +194,69 @@
     <figcaption>
       Frames of the actuated pendulum are encoded to points in the latent phase space. The learned flow carries
       them along the level sets of <i>H</i><sub>&phi;</sub>. The inset shows how a non-zero torque
-      <i>u</i> tilts the potential <i>V</i><sub>&phi;</sub>(<i>q</i>, <i>u</i>).</figcaption>
+      <b><i>u</i></b> tilts the potential <i>V</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>u</i></b>).</figcaption>
   </figure>
+
+  <p>
+    The diagram shows how the actions move the state across levels. In the conservative case, a trajectory
+    stays on one level set of <i>H</i><sub>&phi;</sub> (the grey lines). With actuation, the action
+    <b><i>u</i></b><sub>t</sub> enters the potential, so at every step the symplectic update follows the level
+    sets of the Hamiltonian defined by the current action. The action therefore selects which level set the
+    state moves along, and a sequence of actions carries the state from level to level, tracing the rollout
+    (the blue curve in the upper left of the diagram). Volume preservation is a property of each step, not of a
+    particular level, so it survives the change of level for every action sequence, provided
+    <b><i>u</i></b><sub>t</sub> is held constant within a step.
+  </p>
 
   <h3>Three consequences of the structure</h3>
   <div class="props">
     <div class="prop">
       <img src="assets/concept_volume.png" alt="A blob of latent states is carried along a trajectory and changes shape but keeps its area" loading="lazy">
       <div>
-        <h3>1 &middot; Nothing collapses</h3>
-        <p>A symplectic step can stretch and shear a cloud of latent states but never shrinks its volume. So the
-          flow cannot contract uniformly, cannot have an asymptotically stable fixed point, and cannot merge two
-          distinct states, whatever the learned parameters or the actions.</p>
+        <h3>1 &middot; Exact volume preservation</h3>
+        <p>Symplectic integration preserves phase-space volume by construction, provably eliminating some
+          representation collapse modes during evaluation rollouts for arbitrary action sequences.</p>
       </div>
     </div>
     <div class="prop">
       <img src="assets/concept_step_size.png" alt="A continuous curve through the latent space with large dots at the observed frames and small dots at quarter steps in between" loading="lazy">
       <div>
-        <h3>2 &middot; A curve, not a lookup</h3>
-        <p>The predictor describes a continuous flow, so the step size <i>h</i> is a free number. The model was
-          trained on frames spaced <i>h</i> apart but can be integrated at <i>h</i>/2 or <i>h</i>/4 to read off
-          states between the frames it saw.</p>
+        <h3>2 &middot; Continuous-time step size</h3>
+        <p>Because <i>H</i><sub>&phi;</sub> parameterizes a continuous vector field, a single trained model can
+          be integrated at arbitrary step sizes &Delta;<i>t</i> without retraining, facilitating training on
+          multi-frequency data and non-uniform planning grids.</p>
       </div>
     </div>
     <div class="prop">
       <img src="assets/concept_reversal.png" alt="A forward trajectory under actions u0 to uK-1 and a backward trajectory under uK-1 to u0 that overlap" loading="lazy">
       <div>
-        <h3>3 &middot; Run it backward</h3>
-        <p>Because each step is invertible, applying the same actions in reverse order retraces the forward
-          trajectory. This is what makes numerical time reversal possible, and it is a sanity check that the
-          model learned a reversible flow rather than a lossy map.</p>
+        <h3>3 &middot; Time-reversibility</h3>
+        <p>Flipping time (<i>t</i> &rarr; &minus;<i>t</i>) and reversing the action sequence allows backward-in-time rollouts, serving as an
+          essential primitive for computing backward reachable tubes and online safety guarantees in optimal
+          control.</p>
       </div>
     </div>
   </div>
 
-  <h3>A learned energy that tracks the real one</h3>
+  <h3>A learned energy that tracks the real one (the conservative case)</h3>
   <p>
-    The Hamiltonian is learned from pixels alone, yet along a rollout it stays flat, and the level it sits at
-    follows the true energy of the pendulum. Each of the four pendulums below swings with a different energy;
-    the learned <i>H</i><sub>&phi;</sub> of each is almost constant over 96 rollout steps.
+    This is the special case of a conservative system, with no actuation (<b><i>u</i></b>&nbsp;=&nbsp;0). Under actuation
+    the controller does work and <i>H</i><sub>&phi;</sub> is no longer constant, although the step stays
+    symplectic. In the conservative case the learned <i>H</i><sub>&phi;</sub> is <b>not a physical energy</b>:
+    it is learned from pixels alone, with no energy supervision, so its offset and scale are arbitrary (the
+    values below sit around &minus;60). It is nevertheless <b>conserved</b> along the rollout, and the level it
+    sits at orders the episodes the way the true energy does. Each of the four pendulums below swings with a
+    different energy; the learned <i>H</i><sub>&phi;</sub> of each is almost constant over 96 rollout steps.
+  </p>
+  <p>
+    The relation between the two is monotone but <b>not linear</b>: in the bottom-right panel the points bend
+    and scatter around the trend, and the correlation of 0.98 measures how well they follow it, not that they
+    lie on a line. This is expected, because any increasing function of a conserved quantity is itself
+    conserved, so <i>H</i><sub>&phi;</sub> is only identified up to such a reparametrization.
   </p>
   <figure>
     <img src="assets/gif_energy.gif" alt="Four pendulums with different energies swinging, and the learned Hamiltonian staying flat for each along the rollout" loading="lazy">
-    <figcaption>LeHami on the single-rod conservative pendulum, 60 test episodes. Top: four episodes at
+    <figcaption><b class="nm">LeHami</b> on the single-rod conservative pendulum, 60 test episodes. Top: four episodes at
       increasing true energy. Bottom left: learned <i>H</i><sub>&phi;</sub> along the rollout (the grey lines are
       the other episodes). Bottom right: mean <i>H</i><sub>&phi;</sub> against true energy, one dot per episode.</figcaption>
   </figure>
@@ -211,43 +265,111 @@
 <section id="architecture">
   <h2>Architecture</h2>
   <p>
-    LeHami keeps a JEPA's encoder and training signal and swaps only the predictor. Two pieces are new: a
-    fixed stencil that reads the momentum off the encoder trajectory, and the Hamiltonian flow that replaces the
-    transformer predictor.
+    We train on unannotated trajectories of observations [<b>x</b><sub>0</sub>, &hellip;,
+    <b>x</b><sub>T&minus;1</sub>] and actions [<b><i>u</i></b><sub>0</sub>, &hellip;,
+    <b><i>u</i></b><sub>T&minus;1</sub>]. <b class="nm">LeHami</b> has two learned components, an encoder Enc<sub>&theta;</sub> and
+    a Hamiltonian flow (Ham flow<sub>&phi;</sub>) that replaces the predictor, joined by the zero-parameter
+    Savitzky&ndash;Golay (SG) stencil that reads the momentum off the encoder trajectory:
   </p>
-  <figure>
+  <div class="eq">
+    Encoder + SG: &nbsp;<b>q</b><sub>t</sub> = Enc<sub>&theta;</sub>(<b>x</b><sub>W(t)</sub>), &nbsp;
+    <b>p</b><sub>t</sub> = SG(<b>q</b><sub>t&minus;3</sub>, &hellip;, <b>q</b><sub>t</sub>)<br>
+    Hamiltonian flow: &nbsp;(<b>q&#771;</b><sub>t+1</sub>, <b>p&#771;</b><sub>t+1</sub>) = Ham
+    flow<sub>&phi;</sub>(<b>q</b><sub>t</sub>, <b>p</b><sub>t</sub>, <b><i>u</i></b><sub>t</sub>)
+  </div>
+  <p>
+    where W(t) is a window of W+1 frames that includes <b>x</b><sub>t</sub>. The flow advances the state by one
+    step of Hamilton's equations for a learned scalar <i>H</i><sub>&phi;</sub>(<b>q</b>, <b>p</b>,
+    <b><i>u</i></b>), and &theta; and &phi; are trained end-to-end by backpropagating through the rollout, so
+    the encoder is shaped to produce latent states that admit this structured evolution.
+  </p>
+  <div class="eq">
+    d<b>q</b>/d<i>t</i> = &part;<i>H</i><sub>&phi;</sub>/&part;<b>p</b>, &nbsp;&nbsp;
+    d<b>p</b>/d<i>t</i> = &minus;&part;<i>H</i><sub>&phi;</sub>/&part;<b>q</b>
+  </div>
+<figure>
     <img src="assets/architecture.png" alt="Architecture diagram: encoder and Savitzky-Golay stencil produce (q, p); the Hamiltonian flow with kinetic term K and potential V is applied K times with actions u; losses C compare predictions to encoded future frames and R regularizes the embeddings" loading="lazy">
     <figcaption>
-      <b>Left:</b> the encoder block (Enc + SG) maps a window of frames to the latent state (<i>q</i><sub>t</sub>,
-      <i>p</i><sub>t</sub>); the Hamiltonian flow advances it by one leapfrog step of
-      <i>K</i>(<i>p</i>) + <i>V</i>(<i>q</i>, <i>u</i>), applied <i>K</i> times to its own outputs.
-      <b>Middle:</b> each prediction is scored by the prediction loss (C) against the encoding of the
-      corresponding frames; the regularizer (R) acts on the encoder's embeddings of <i>q</i> (blue) and
-      <i>p</i> (orange). <b>Right:</b> a pixel encoder outputs <i>q</i><sub>t</sub> and a fixed Savitzky&ndash;Golay
-      stencil derives <i>p</i><sub>t</sub> from <i>q</i><sub>t&minus;3</sub>, &hellip;, <i>q</i><sub>t</sub>.</figcaption>
+      <b>LeHami multi-step training. Left:</b> at the anchor, the encoder block (Enc + SG) maps a window of
+      <i>W</i>+1 frames, drawn here as the causal window <b>x</b><sub>t&minus;W</sub>, &hellip;,
+      <b>x</b><sub>t</sub>, to the latent state (<b>q</b><sub>t</sub>, <b>p</b><sub>t</sub>). The Hamiltonian
+      flow (Ham flow) advances it by one leapfrog step of the separable Hamiltonian
+      <i>H</i><sub>&phi;</sub> = <i>K</i><sub>&phi;</sub>(<b>p</b>) + <i>V</i><sub>&phi;</sub>(<b>q</b>,
+      <b><i>u</i></b>), with the action entering the potential, and is applied <i>K</i> times to its own
+      outputs. <b>Middle:</b> each prediction (<b>q&#771;</b><sub>t+k</sub>, <b>p&#771;</b><sub>t+k</sub>) is
+      scored by the prediction loss (C) against the encoding of the corresponding frames, shown here for the
+      last step <i>k</i>=<i>K</i>. The regularizer (R) acts on the encoder's embeddings of <b>q</b> (blue) and
+      <b>p</b> (orange). <b>Right:</b> the encoder block as instantiated in this work: a pixel encoder (Enc)
+      outputs <b>q</b><sub>t</sub>, and a fixed Savitzky&ndash;Golay stencil (SG) derives <b>p</b><sub>t</sub>
+      from <b>q</b><sub>t&minus;3</sub>, &hellip;, <b>q</b><sub>t</sub>.</figcaption>
   </figure>
-  <ol class="steps">
-    <li><b>Encode.</b> A pixel encoder maps a frame (or a short window of frames) to the position-like embedding
-      <i>q</i><sub>t</sub>.</li>
-    <li><b>Read off the momentum.</b> A zero-parameter Savitzky&ndash;Golay stencil differentiates the last few
-      <i>q</i>'s to give <i>p</i><sub>t</sub> = d<i>q</i>/d<i>t</i>, an explicit second-order state.</li>
-    <li><b>Flow.</b> The Hamiltonian flow applies <i>K</i> leapfrog steps with the actions
-      <i>u</i><sub>t</sub>, &hellip;, <i>u</i><sub>t+K&minus;1</sub>.</li>
-    <li><b>Train.</b> Predictions are compared with the encoded future frames, with a regularizer (e.g.
-      SIGReg) on the embeddings to prevent encoder collapse.</li>
-  </ol>
+  <p>
+    <b>The integration.</b> We leverage the leapfrog (St&ouml;rmer&ndash;Verlet) integrator, which is
+    second-order accurate and, crucially, exactly symplectic. For a separable Hamiltonian
+    <i>H</i><sub>&phi;</sub>(<b>q</b>, <b>p</b>, <b><i>u</i></b>) = <i>K</i><sub>&phi;</sub>(<b>S</b><sup>&minus;1</sup><b>p</b>)
+    + <i>V</i><sub>&phi;</sub>(<b>q</b>, <b><i>u</i></b>), with <b>S</b> = diag(e<sup>&sigma;</sup>), the update
+    over a time step &Delta;<i>t</i> is
+  </p>
+  <div class="eq">
+    <b>p&#771;</b><sub>t+&frac12;</sub> = <b>p</b><sub>t</sub> &minus; (&Delta;<i>t</i>/2) &nabla;<sub><b>q</b></sub><i>V</i><sub>&phi;</sub>(<b>q</b><sub>t</sub>, <b><i>u</i></b><sub>t</sub>)<br>
+    <b>q&#771;</b><sub>t+1</sub> = <b>q</b><sub>t</sub> + &Delta;<i>t</i> <b>S</b><sup>&minus;1</sup> &nabla;<i>K</i><sub>&phi;</sub>(<b>S</b><sup>&minus;1</sup><b>p&#771;</b><sub>t+&frac12;</sub>)<br>
+    <b>p&#771;</b><sub>t+1</sub> = <b>p&#771;</b><sub>t+&frac12;</sub> &minus; (&Delta;<i>t</i>/2) &nabla;<sub><b>q</b></sub><i>V</i><sub>&phi;</sub>(<b>q&#771;</b><sub>t+1</sub>, <b><i>u</i></b><sub>t</sub>)
+  </div>
+  <p>
+    where &sigma; is learned and absorbs the relative scale of <b>q</b> and <b>p</b>, which the self-supervised
+    objective leaves undetermined. Because <b>S</b> is a constant linear rescaling, the flow remains exactly
+    symplectic.
+  </p>
+  <p>
+    <b>Action-conditioned Hamiltonian.</b> Under actuation the controller does work and
+    <i>H</i><sub>&phi;</sub> is no longer constant, but symplecticity is a property of the map. We condition the
+    potential on the action so <i>V</i><sub>&phi;</sub> = <i>V</i><sub>&phi;</sub>(<b>q</b>, <b><i>u</i></b>) and
+    the generalized force <b>F</b>(<b>q</b>, <b><i>u</i></b>) = &minus;&part;<i>V</i><sub>&phi;</sub>/&part;<b>q</b>
+    is a <b>q</b>-gradient for every action by construction. Separability is untouched and the leapfrog stays
+    <i>exactly</i> symplectic for every action sequence, provided only that <b><i>u</i></b><sub>t</sub> is
+    constant within a step.
+  </p>
+  <p>
+    <b>How <b>p</b> is obtained.</b> We enforce the canonical relation <b>p</b> = d<b>q</b>/d<i>t</i> by
+    computing <b>p</b> as the temporal derivative of the generalized coordinates <b>q</b> via a fixed
+    Savitzky&ndash;Golay stencil on the encoder trajectory: a least-squares quadratic fit over <b>q</b> that is
+    then differentiated at time step <i>t</i>. The stencil is linear with constant coefficients, so it adds no
+    learned parameters and cannot itself collapse.
+  </p>
+  <p>
+    <b>Multi-step learning.</b> We consider multi-step prediction over a <i>K</i>-step horizon by iteratively
+    applying the Hamiltonian flow. The loss is the average MSE across the trajectory. Given an anchor of
+    <i>A</i> time steps used to form the embedding of the first time step of the episode, and <i>K</i>
+    self-fed leapfrog steps, the loss is
+  </p>
+  <div class="eq">
+    <i>L</i> = (1/<i>K</i>) &Sigma;<sub>j=1..K</sub> &#8741;<b>q&#771;</b><sub>A+j</sub> &minus; <b>q</b><sub>A+j</sub>&#8741;&sup2;
+    + &lambda;<sub>p</sub> (1/<i>K</i>) &Sigma;<sub>j=1..K</sub> &#8741;<b>p&#771;</b><sub>A+j</sub> &minus; <b>p</b><sub>A+j</sub>&#8741;&sup2;
+    + &lambda;<sub>S</sub> <i>S</i>
+  </div>
+  <p>
+    where the first term is the prediction loss in the position-like embedding, the second is the prediction
+    loss in the momentum-like embedding weighted by &lambda;<sub>p</sub>, and the last term <i>S</i> is the
+    regularizer, which in principle can be any (e.g., SIGReg) and acts on ground-truth embeddings, never on the
+    rollout.
+  </p>
 </section>
 
 <section id="envs">
-  <h2>Two pendulum environments</h2>
+  <h2>Empirical validation of <b class="nm">LeHami</b></h2>
   <p>
-    We test on pixel observations (64&times;64 RGB) of a pendulum. The conservative environment has three
-    rod lengths and no actuation. The actuated one adds three bob masses and a piecewise-constant torque.
+    We evaluate our approach on two pendulum environments rendered as 64&times;64 RGB images. In the
+    conservative pendulum there is no actuation, and episodes vary across three rod lengths. In the actuated
+    pendulum, a recorded sequence of scalar torques (<i>u</i><sub>t</sub>)<sub>t</sub>, drawn uniformly, does
+    work on the system, so energy is no longer conserved; episodes vary across the same three rod lengths and
+    three masses, since under actuation the mass sets the response to the torque. In both environments the true
+    dynamics preserve phase-space volume, which is the property <b class="nm">LeHami</b> builds in; the actuated pendulum tests it
+    once energy conservation no longer holds.
   </p>
   <figure>
     <img src="assets/datasets_strip_pendula.png" alt="Frames of the conservative and actuated pendulum with the applied torque below each row" loading="lazy">
     <figcaption>One episode of each environment. The actuated torque (bottom) is held for three frames;
-      the conservative pendulum has <i>u</i><sub>t</sub> &equiv; 0.</figcaption>
+      the conservative pendulum has <b><i>u</i></b><sub>t</sub> &equiv; 0.</figcaption>
   </figure>
 </section>
 
@@ -256,53 +378,78 @@
 
   <h3>Long-horizon prediction and latent volume</h3>
   <p>
-    On the conservative pendulum (three rod lengths, three seeds per model), LeHami predicts angle and
-    angular velocity more accurately than the unconstrained LeWM baseline over long rollouts. The velocity
-    error of LeWM is about <b>2.8&times;</b> larger over the first ten rollout steps. The right panel tracks
-    the cumulative log-volume of the one-step map: it stays at zero for LeHami and falls steadily for LeWM.
+    On the conservative pendulum, the angle predictions of the two models are level early and <b class="nm">LeHami</b> pulls ahead
+    from <i>K</i>&nbsp;&approx;&nbsp;11 on. Regarding the prediction of velocity, the middle panel shows that
+    <b class="nm">LeHami</b> leads by <b>2.8&times;</b> over the first ten steps and <b>1.3&times;</b> at the end of the horizon,
+    that is, its velocity error is 2.8&times; smaller than that of the baseline LeWM
+    (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>) over the first ten rollout steps.
+  </p>
+  <p>
+    The right panel tracks the <b>cumulative log-volume</b> of the one-step map, (1/<i>n</i>)
+    &Sigma;<sub><i>i</i>=0..<i>K</i>&minus;1</sub> log|det <i>J</i>(<b>z</b><sub><i>i</i></sub>)|, where
+    <i>J</i> is the Jacobian of the one-step predictor and <i>n</i> is the latent dimension. The determinant of
+    <i>J</i> is the factor by which the map scales a small volume of latent states: above 1 it expands, below 1
+    it contracts, and exactly 1 it preserves volume. Taking the logarithm turns the product of these factors
+    along the rollout into a running sum, so the curve reads as the total volume change accumulated up to step
+    <i>K</i>, per latent dimension. For <b class="nm">LeHami</b> the curve is exactly 0 (|det <i>J</i>| = 1 at every state), so
+    there is no contraction. For LeWM it declines steadily and linearly, which means every step shrinks the
+    latent volume a little more.
   </p>
   <figure>
     <img src="assets/physics_rollout.png" alt="Rollout error in angle and velocity, and cumulative log-volume, for LeHami and LeWM" loading="lazy">
     <figcaption>
-      <span class="swatch" style="background:#1f8a7d"></span>LeHami
+      <span class="swatch" style="background:#1f8a7d"></span><b class="nm">LeHami</b>
       <span class="swatch" style="background:#e0245e; margin-left:10px"></span>LeWM.
       Left and middle: MAE of &theta; and &omega; over 45 test episodes (mean &plusmn; 1 s.d. over three seeds).
       Right: cumulative log-volume of the one-step map.</figcaption>
   </figure>
 
   <p>
-    The animation shows where that curve comes from. A unit disc of latent perturbations is pushed through the
-    one-step map at each rollout step. The ellipse axes are the largest and smallest singular values of the map's
-    Jacobian, averaged over 45 test episodes. For LeHami the product of the two is 1: the disc is stretched one
-    way and squeezed the other, with its area preserved. For LeWM the smallest singular value is essentially
-    zero, so the map flattens the disc onto a line at every step.
+    The animation below shows where this curve comes from. At each rollout step, a unit disc of small latent
+    perturbations around the current state is pushed through the one-step map. Since the map acts locally
+    through its Jacobian, the disc comes out as an ellipse whose two axes are the largest and smallest singular
+    values of that Jacobian, averaged over 45 test episodes. The area of the ellipse relative to the disc is
+    the volume change of the step. For <b class="nm">LeHami</b> the product of the two axes is 1: the disc is stretched one way and
+    squeezed the other, with its area preserved. For LeWM the smallest singular value is essentially zero, so
+    the map flattens the disc onto a line at every step. The curve at the bottom accumulates the logarithm of
+    this change over the rollout, which is the same cumulative log-volume as in the figure above.
   </p>
   <figure>
     <img src="assets/gif_volume.gif" alt="A unit disc mapped to an ellipse of equal area by LeHami and to a flat line by LeWM, with cumulative log-volume below" loading="lazy">
-    <figcaption>The two directions drawn are the extreme ones of a 64-dimensional map for LeHami (192 for LeWM,
+    <figcaption>The two directions drawn are the extreme ones of a 64-dimensional map for <b class="nm">LeHami</b> (192 for LeWM,
       which sees three embeddings). Bottom: cumulative log-volume, the same quantity as in the figure above.</figcaption>
   </figure>
 
-  <h3>Unseen step sizes and time reversal</h3>
+  <h3><b class="nm">LeHami</b> is a world model with time re-stepping and reversal</h3>
   <p>
-    Because the learned flow is a continuous-time Hamiltonian system, it can be integrated with step sizes
-    it never saw in training. Halving or quartering the trained step leaves the error within about 1.3&times;
-    of the trained step, whereas doubling it is clearly worse. Reversing the flow and integrating back
-    returns to the starting state with a round-trip error below 10<sup>&minus;4</sup>&nbsp;% for up to 30 steps.
+    <b class="nm">LeHami</b> is a world model that runs at any rate, and in either direction, because the Hamiltonian predictor
+    <i>H</i><sub>&phi;</sub> is a continuous-time vector field. We showcase this capability by holding the
+    learned <i>H</i><sub>&phi;</sub> fixed and integrating it at <i>s</i>&Delta;<i>t</i>, taking
+    1/<i>s</i> sub-steps per observed frame, and compare against a Runge&ndash;Kutta integration of the true ODE
+    from the same initial condition. Refining below the observation rate leaves the predicted trajectory
+    invariant (left); coarsening breaks it, as an explicit symplectic integrator leaves its stability band. The
+    same property makes the rollout reversible. The right panel shows the round-trip error of the latent state
+    after rolling <i>K</i> steps forward and back with &Delta;<i>t</i> &rarr; &minus;&Delta;<i>t</i>, which
+    stays below 10<sup>&minus;4</sup>&nbsp;%.
   </p>
   <figure>
     <img src="assets/dt_and_reversal.png" alt="Error at integrator steps dt, dt/2, dt/4 and 2dt, and round-trip error versus number of steps" loading="lazy">
-    <figcaption>Left: MAE of &theta; against a Runge&ndash;Kutta integration of the true ODE, for integrator
-      steps never seen in training. Right: round-trip error after <i>K</i> steps out and back.</figcaption>
+    <figcaption><b>The learned flow behaves like a continuous-time vector field, and is approximately
+      reversible, showcased with the conservative pendulum. Left:</b> MAE of &theta; integrated with step sizes
+      never seen in training (to the ground truth from the integration of the ODE). The model is trained only at
+      &Delta;<i>t</i> = 0.1&nbsp;s; halving and quartering the step (2 and 4 sub-steps per frame, respectively)
+      traces the same trajectory, while doubling it breaks. <b>Right:</b> round-trip error after rolling
+      <i>K</i> steps out and back by sign flip &Delta;<i>t</i> &rarr; &minus;&Delta;<i>t</i> in the
+      <i>H</i><sub>&phi;</sub>.</figcaption>
   </figure>
 
   <figure>
     <img src="assets/gif_reversal.gif" alt="A latent trajectory run forward for 20 steps and then backward along the same path, with the pendulum state the latent corresponds to swinging out and then returning to its start" loading="lazy">
     <figcaption><b>Time reversal in practice.</b> This is a replay of the model, not of the real system. The
-      pendulum is conservative: there are no actions (<i>u</i>&nbsp;=&nbsp;0), so nothing is applied to make it go
-      back. LeHami (EXP-067) is run 20 steps forward with +&Delta;t (blue), then 20 steps with the <i>same flow</i>
+      pendulum is conservative: there are no actions (<b><i>u</i></b>&nbsp;=&nbsp;0), so nothing is applied to make it go
+      back. <b class="nm">LeHami</b> (EXP-067) is run 20 steps forward with +&Delta;t (blue), then 20 steps with the <i>same flow</i>
       and the step size negated to &minus;&Delta;t (pink). Left: the pendulum state that the latent corresponds to,
-      which swings out and then returns to its start. Right: the latent (<i>q</i>, <i>p</i>) retraces its own path
+      which swings out and then returns to its start. Right: the latent (<b><i>q</i></b>, <b><i>p</i></b>) retraces its own path
       and lands back on the starting point to a relative distance of 2&times;10<sup>&minus;7</sup>.</figcaption>
   </figure>
 
@@ -324,7 +471,7 @@
       &plusmn;&omega; to the same latent. 92&nbsp;% of the goals need the correct sign.</li>
     <li><b>LeWM, window with untied weights:</b> breaks time symmetry, captures signed velocity and reaches the
       highest success, at a high cost per solve that forces it to replan less often.</li>
-    <li><b>LeHami:</b> signed velocity is guaranteed by the structure, since <i>p</i> is read off the encoder
+    <li><b>LeHami:</b> signed velocity is guaranteed by the structure, since <b><i>p</i></b> is read off the encoder
       trajectory with no extra parameters, and the Hamiltonian flow has 2.23M parameters against 3.31M for LeWM's
       transformer and projection.</li>
   </ul>
@@ -338,42 +485,56 @@
       <tr class="group"><td rowspan="4">Position</td><td>LeWM <i>W</i>=1</td><td class="num"><b>0.800 &plusmn; 0.019</b></td><td class="num">12.87</td><td>R=9, 4 solves</td></tr>
       <tr><td>LeWM <i>W</i>=3 (tied)</td><td class="num">0.633 &plusmn; 0.020</td><td class="num">13.65</td><td>R=9, 4 solves</td></tr>
       <tr><td>LeWM <i>W</i>=3 (untied)</td><td class="num">0.696 &plusmn; 0.016</td><td class="num">13.65</td><td>R=9, 4 solves</td></tr>
-      <tr class="lehami"><td>LeHami</td><td class="num">0.480 &plusmn; 0.084</td><td class="num">8.05</td><td>R=9, 4 solves</td></tr>
+      <tr class="lehami"><td><b class="nm">LeHami</b></td><td class="num">0.480 &plusmn; 0.084</td><td class="num">8.05</td><td>R=9, 4 solves</td></tr>
 
       <tr class="group"><td rowspan="4">Velocity</td><td>LeWM <i>W</i>=1</td><td class="num">0.184 &plusmn; 0.027</td><td class="num">8.78</td><td>R=15, 2 solves</td></tr>
       <tr><td>LeWM <i>W</i>=3 (tied)</td><td class="num">0.473 &plusmn; 0.014</td><td class="num">13.65</td><td>R=9, 4 solves</td></tr>
       <tr><td>LeWM <i>W</i>=3 (untied)</td><td class="num"><b>0.800 &plusmn; 0.058</b></td><td class="num">13.65</td><td>R=9, 4 solves</td></tr>
-      <tr class="lehami"><td>LeHami</td><td class="num">0.527 &plusmn; 0.019</td><td class="num">10.98</td><td>R=6, 5 solves</td></tr>
+      <tr class="lehami"><td><b class="nm">LeHami</b></td><td class="num">0.527 &plusmn; 0.019</td><td class="num">10.98</td><td>R=6, 5 solves</td></tr>
 
       <tr class="group"><td rowspan="4">Position and velocity</td><td>LeWM <i>W</i>=1</td><td class="num">0.142 &plusmn; 0.033</td><td class="num">12.87</td><td>R=9, 4 solves</td></tr>
       <tr><td>LeWM <i>W</i>=3 (tied)</td><td class="num">0.400 &plusmn; 0.037</td><td class="num">9.31</td><td>R=15, 2 solves</td></tr>
       <tr><td>LeWM <i>W</i>=3 (untied)</td><td class="num"><b>0.636 &plusmn; 0.025</b></td><td class="num">13.65</td><td>R=9, 4 solves</td></tr>
-      <tr class="lehami"><td>LeHami</td><td class="num">0.304 &plusmn; 0.088</td><td class="num">10.98</td><td>R=6, 5 solves</td></tr>
+      <tr class="lehami"><td><b class="nm">LeHami</b></td><td class="num">0.304 &plusmn; 0.088</td><td class="num">10.98</td><td>R=6, 5 solves</td></tr>
     </tbody>
   </table>
   </div>
   <p class="note">
     Goal-reaching success on the actuated pendulum, by clause: best success probability per model at a matched
     budget of at most 15 TFLOP per episode, mean &plusmn; s.d. over three model seeds. The success of a
-    do-nothing policy (<i>u</i>&nbsp;=&nbsp;0) is 0.060, 0.240 and 0.040 on the three clauses. Bold marks the
+    do-nothing policy (<b><i>u</i></b>&nbsp;=&nbsp;0) is 0.060, 0.240 and 0.040 on the three clauses. Bold numbers mark the
     best model within a clause. <i>R</i> is the number of steps executed before replanning.
   </p>
-  <p>
-    The honest summary: LeHami does not beat the best unconstrained baseline on success. LeWM with a
-    three-frame untied window reaches 0.800 on velocity goals against 0.527, and the single-frame LeWM is best on
-    position. What LeHami offers is a cheaper way to get signed velocity: a predictor with fewer parameters, less
-    compute per episode (8.05 against 12.87 TFLOP on position goals at the same replanning interval), and
-    the volume-preserving guarantees. The paper points to a jointly learned momentum embedding in place of the
-    fixed stencil as the route to closing the gap.
-  </p>
-
   <figure>
     <img src="assets/gif_planning.gif" alt="A pendulum controlled by LeHami reaching a goal state in 30 steps, with angle, velocity and torque traces" loading="lazy">
-    <figcaption>One planning episode with LeHami (EXP-079, seed 0), on a test goal where it succeeded. The
+    <figcaption>One planning episode with <b class="nm">LeHami</b> (EXP-079, seed 0), on a test goal where it succeeded. The
       green pendulum and star mark the goal at step 30. The planner re-solves every 6 steps; the faint blue
-      line is the current plan and the teal line the torque actually applied. LeHami reached the goal on 3 of
+      line is the current plan and the teal line the torque actually applied. <b class="nm">LeHami</b> reached the goal on 3 of
       the 10 goals we ran for this animation, in line with the 0.30 in the table.</figcaption>
   </figure>
+
+  <h3>Conclusion</h3>
+  <p>
+    We introduced <b class="nm">LeHami</b>, a world model architecture that rigorously preserves the geometric properties of
+    second-order physical systems. Its exact symplectic step provides structural guarantees: exact volume
+    preservation that provably eliminates some rollout collapse modes and continuous-time integration with
+    time-reversal. We have shown empirically on the conservative pendulum that <b class="nm">LeHami</b> preserves latent volume
+    along the rollout, whereas LeWM contracts it steadily, losing log-volume linearly with the horizon.
+    Consistent with this, <b class="nm">LeHami</b> predicts velocity better throughout and angle better at long horizons. With
+    actuation, LeWM reaches the goal angle more often, but it captures signed velocity only when its temporal
+    window is explicitly untied. <b class="nm">LeHami</b> instead captures the full state, angle and signed velocity alike, by
+    construction, paving the way towards velocity-constrained planning and FLOP-efficient replanning.
+  </p>
+  <p>
+    <b>Limitations and future work.</b> First, while our latent architecture maintains exact volume
+    preservation under actuation, strongly dissipative physical systems (e.g., heavy friction) exhibit
+    phase-space volume contraction. Thus, extending <b class="nm">LeHami</b> to these regimes, e.g., via port-Hamiltonian
+    extensions, is a natural direction for future work. Second, <b class="nm">LeHami</b> specifically targets velocity-aware
+    tasks, whereas purely static pose tasks are served well by spatial-focused, unconstrained predictors.
+    Finally, replacing our zero-overhead SG stencil with a learned momentum-like embedding offers a clear path
+    to potentially improve performance without sacrificing long-horizon phase-space stability.
+  </p>
+
 </section>
 
 <section id="code">
@@ -388,7 +549,7 @@ cd LeHami
 uv sync
 uv run pytest lehami/tests/
 bash lehami/experiments/conservative_multi_rod.sh</code></pre>
-  <p><a href="https://github.com/rominay/LeHami">github.com/rominay/LeHami</a> &middot; released under the Apache License 2.0.</p>
+  <p><a href="https://github.com/rominay/LeHami">github.com/rominay/<b class="nm">LeHami</b></a> &middot; released under the Apache License 2.0.</p>
 </section>
 
 <section id="citation">
@@ -405,7 +566,7 @@ bash lehami/experiments/conservative_multi_rod.sh</code></pre>
 </main>
 
 <footer>
-  <div class="wrap">LeHami &middot; Apache-2.0 &middot;
+  <div class="wrap"><b class="nm">LeHami</b> &middot; Apache-2.0 &middot;
     <a href="https://github.com/rominay/LeHami">Code</a></div>
 </footer>
 
