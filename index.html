@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LeHami: Symplectic Latent Dynamics for World Models</title>
+<title>LeHami: Symplectic Latent Dynamics Toward Long-Horizon Rollouts in World Models</title>
 <meta name="description" content="LeHami replaces the predictor of a JEPA world model with an action-conditioned Hamiltonian flow integrated by an exactly symplectic leapfrog step.">
-<meta property="og:title" content="LeHami: Symplectic Latent Dynamics for World Models">
+<meta property="og:title" content="LeHami: Symplectic Latent Dynamics Toward Long-Horizon Rollouts in World Models">
 <meta property="og:description" content="A JEPA world model whose latent dynamics preserve phase-space volume by construction.">
-<meta property="og:image" content="assets/physics_rollout.png">
+<meta property="og:image" content="assets/fig4_same_state.png">
 <style>
   :root {
     --bg: #ffffff; --fg: #111418; --muted: #55606e; --line: #e2e6ee; --card: #f8f8f8;
@@ -25,7 +25,7 @@
   a:hover { text-decoration: underline; }
   .wrap { max-width: 1280px; margin: 0 auto; padding: 0 20px; }
   header { padding: 64px 0 28px; text-align: center; }
-  h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.02em; }
+  h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; margin: 0 0 16px; letter-spacing: -0.02em; text-wrap: balance; }
   h1 .name { color: var(--accent); }
   .authors { font-size: 1.5rem; font-weight: 700; margin: 8px 0; }
   .authors sup, .affil sup { font-size: 0.7em; }
@@ -84,10 +84,10 @@
 
 <header>
   <div class="wrap">
-    <h1><span class="name">LeHami</span>: Symplectic Latent Dynamics for World Models</h1>
+    <h1><span class="name">LeHami</span>: Symplectic Latent Dynamics Toward Long-Horizon Rollouts in World Models</h1>
     <p class="authors">
       <a href="https://rominayalovetzky.com/">Romina Yalovetzky</a><sup>1,*</sup>,
-      <a href="https://randallbalestriero.github.io/">Randall Balestriero</a><sup>2</sup>,
+      <a href="https://randallbalestriero.github.io/">Randall Balestriero</a><sup>2,3</sup>,
       <a href="http://yann.lecun.com/">Yann LeCun</a><sup>1,3</sup>
     </p>
     <p class="affil"><sup>1</sup>Courant Institute, New York University &nbsp;&middot;&nbsp;
@@ -120,28 +120,31 @@
       The idea comes from physics, where Hamiltonian mechanics governs dynamics through a single scalar
       <i>H</i> and preserves phase-space volume at every step. Machine-learning methods have since learned the
       Hamiltonian from data, such as Hamiltonian Neural Networks
-      (<a href="https://arxiv.org/abs/1906.01563">Greydanus et al., 2019</a>), Symplectic ODE-Net
-      (<a href="https://arxiv.org/abs/1909.12077">Chen et al., 2019</a>) and Hamiltonian Generative Networks
-      (<a href="https://arxiv.org/abs/1909.13789">Toth et al., 2019</a>). <b>LeHami</b> brings this prior to JEPA
-      world models, learned end to end from pixels and integrated exactly symplectically.</p>
+      (<a href="https://arxiv.org/abs/1906.01563">Greydanus et al., 2019</a>), Symplectic Recurrent Neural Networks
+      (<a href="https://arxiv.org/abs/1909.13334">Chen et al., 2019</a>) and Hamiltonian Generative Networks
+      (<a href="https://arxiv.org/abs/1909.13789">Toth et al., 2019</a>). <b>LeHami</b> brings this line of work
+      into JEPA world models learned from video under actions, to address one of their failures: the collapse of
+      long rollouts.</p>
 
     <p><span class="lead">The guarantee</span>
       Because the leapfrog step is symplectic, this construction preserves phase-space volume at every rollout
       step as a consequence. This tackles the problem of collapse directly: it rules out uniform contraction,
       asymptotically stable fixed points, and merging of distinct latent states, independently of the learned
-      parameters or action sequence.</p>
+      parameters or action sequence. The guarantee holds over the whole latent space, while the data lie on a thin
+      surface inside it, so we also measure collapse on the data.</p>
 
     <p><span class="lead">The results</span>
-      On the conservative pendulum, <b class="nm">LeHami</b> preserves latent volume along the rollout, whereas LeWM
-      (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>), the unconstrained JEPA world model we
-      compare to, contracts it steadily, losing log-volume linearly with the horizon. Consistent with this,
-      <b class="nm">LeHami</b> predicts velocity better throughout and angle better at long horizons. The learned flow
-      also supports accurate integration at unseen sub-frame step sizes and numerical time reversal. On the
-      actuated pendulum, LeWM reaches the goal angle more often, but it captures signed velocity only when its
-      temporal window is explicitly untied. <b class="nm">LeHami</b> instead captures the full state, angle and signed
-      velocity alike, by construction, paving the way towards velocity-constrained planning and FLOP-efficient
-      replanning. These results show how geometric structure can provide inference-time guarantees that are
-      complementary to representation regularization in latent world models.</p>
+      We measure rollout collapse on the data, with four ratios of the rollout to the truth, on five environments
+      learned from pixels: conservative and actuated pendulums, a mass-spring, a two-body system and a cart pole.
+      With the encoder and latent state held fixed, an MLP and a transformer predictor contract the rollout on every
+      environment, while <b class="nm">LeHami</b>'s rollouts do not merge. <b class="nm">LeHami</b> is the most accurate of the three at long horizons, in
+      position on four of the five environments and in velocity on three, while at short horizons the free predictors
+      are more accurate on two of the five. The learned flow also integrates at unseen sub-frame step sizes and, run
+      backward with the recorded actions, recovers earlier frames as well as it predicts later ones.
+      LeWM (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>), with a richer three-frame encoder of its own, is more accurate on four of the five, which suggests
+      incorporating a richer encoder within <b class="nm">LeHami</b> in future work. These results show how geometric structure can
+      provide inference-time guarantees that are complementary to representation regularization in latent world
+      models.</p>
   </div>
   <div class="tldr">
     <span class="title">Contributions</span>
@@ -150,15 +153,18 @@
         equipped with a learned separable Hamiltonian predictor over a canonical latent split
         (<b><i>q</i></b>, <b><i>p</i></b>). We prove that its volume-preserving step eliminates three specific collapse modes
         during evaluation rollouts across arbitrary horizons and actions.</li>
-      <li><b>Continuous-time &amp; time reversibility:</b> We show that a single trained predictor
-        <i>H</i><sub>&phi;</sub> acts as a continuous vector field, enabling sub-frame time integration without
-        performance degradation and achieving numerical time-reversal with round-trip error below
-        10<sup>&minus;4</sup>&nbsp;% without architectural modifications.</li>
+      <li><b>Rollout collapse, measured on the data:</b> To our knowledge, this is one of the first works to show
+        rollout collapse in JEPA world models with measures taken on the data. With the encoder and latent state
+        fixed, an MLP and a transformer predictor contract the rollout on all five environments and four measures,
+        while <b class="nm">LeHami</b>'s rollouts do not merge.</li>
+      <li><b>Continuous-time &amp; invertibility:</b> We show that a single trained predictor <i>H</i><sub>&phi;</sub> acts as a
+        continuous vector field, enabling sub-frame time integration without performance degradation, and that run
+        backward with the recorded actions it recovers earlier frames as well as it predicts later ones.</li>
       <li><b>Complete physics representation &amp; principled planning:</b> By construction rather than by
-        architectural tuning, <b class="nm">LeHami</b> represents the full state through exact geometric structure. Across
-        conservative and actuated pendulum environments, we empirically show that <b class="nm">LeHami</b> accurately recovers
-        full system dynamics. This paves the way towards compute-efficient planning to goals that specify the
-        full physical state: position and velocity.</li>
+        architectural tuning, <b class="nm">LeHami</b> represents the full state through exact geometric structure. Across five
+        environments, <b class="nm">LeHami</b> is the most accurate of the same-state predictors at long horizons in position on four of
+        five and in velocity on three of five (the pendulums and the mass-spring), and beats chance in both on all
+        five. It can also be used for planning, with the limits we report.</li>
     </ul>
   </div>
 </section>
@@ -172,19 +178,23 @@
     space generated by a single scalar <i>H</i>. What matters for us is not that this flow conserves
     something, but that it is <span class="hl">symplectic</span>: it preserves the oriented area spanned in
     each (<b><i>q</i></b>, <b><i>p</i></b>) plane, and with it phase-space volume at every step. A cloud of
-    states can be stretched and sheared, but never squeezed. Crucially, this persists under actuation, provided
+    states can be stretched, rotated and sheared, and squeezed in some directions only if it is stretched in
+    others: its total volume never shrinks. Crucially, this persists under actuation, provided
     the action enters the Hamiltonian.
   </p>
   <p>
-    A predictor without structure takes a latent state and evolves it to the next state. Nothing stops that
-    network from squeezing the latent space a little at every step; over a long rollout the squeeze compounds,
-    distinct states drift together and the information that told them apart is gone.
+    A predictor without structure takes a latent state and evolves it to the next state. It is trained on short
+    clips and then rolled out far beyond them, each prediction fed back as the next input. Nothing stops that
+    network from squeezing the latent space a little at every step: a contraction of 0.99 per step is barely
+    visible in training (0.99<sup>8</sup>&nbsp;&approx;&nbsp;0.92) and collapses a long rollout
+    (0.99<sup>50</sup>&nbsp;&approx;&nbsp;0.6). Distinct states can then move together until they are hard to tell
+    apart.
   </p>
   <p>
     <b class="nm">LeHami</b> gives the latent space a <span class="hl">symplectic</span> phase-space structure directly. The
     encoder maps each frame to a point (<b><i>q</i></b>, <b><i>p</i></b>), and the predictor is a learned
     Hamiltonian <i>H</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>p</i></b>, <b><i>u</i></b>) =
-    <i>K</i><sub>&phi;</sub>(<b><i>p</i></b>) + <i>V</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>u</i></b>),
+    <i>T</i><sub>&phi;</sub>(<b><i>p</i></b>) + <i>V</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>u</i></b>),
     where <b><i>u</i></b> is the control action vector (for the pendulum, the applied torque), advanced by a
     leapfrog step. The action enters through the potential, so a torque literally tilts the energy landscape
     the state moves on.
@@ -195,7 +205,8 @@
     <figcaption>
       Frames of the actuated pendulum are encoded to points in the latent phase space. The learned flow carries
       them along the level sets of <i>H</i><sub>&phi;</sub>. The inset shows how a non-zero torque
-      <b><i>u</i></b> tilts the potential <i>V</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>u</i></b>).</figcaption>
+      <b><i>u</i></b> tilts the potential <i>V</i><sub>&phi;</sub>(<b><i>q</i></b>, <b><i>u</i></b>). The drawing writes the
+      kinetic term <i>T</i> as <i>K</i>.</figcaption>
   </figure>
 
   <p>
@@ -231,10 +242,10 @@
     <div class="prop">
       <img src="assets/concept_reversal.png" alt="A forward trajectory under actions u0 to uK-1 and a backward trajectory under uK-1 to u0 that overlap" loading="lazy">
       <div>
-        <h3>3 &middot; Time-reversibility</h3>
-        <p>Flipping time (<i>t</i> &rarr; &minus;<i>t</i>) and reversing the action sequence allows backward-in-time rollouts, serving as an
-          essential primitive for computing backward reachable tubes and online safety guarantees in optimal
-          control.</p>
+        <h3>3 &middot; Invertibility given the action history</h3>
+        <p>Flipping the step (&Delta;<i>t</i> &rarr; &minus;&Delta;<i>t</i>) and replaying the actions in reverse order
+          allows backward-in-time rollouts, serving as an essential primitive for computing backward reachable tubes
+          and online safety guarantees in optimal control.</p>
       </div>
     </div>
   </div>
@@ -295,31 +306,36 @@
       <i>W</i>+1 frames, drawn here as the causal window <b>x</b><sub>t&minus;W</sub>, &hellip;,
       <b>x</b><sub>t</sub>, to the latent state (<b>q</b><sub>t</sub>, <b>p</b><sub>t</sub>). The Hamiltonian
       flow (Ham flow) advances it by one leapfrog step of the separable Hamiltonian
-      <i>H</i><sub>&phi;</sub> = <i>K</i><sub>&phi;</sub>(<b>p</b>) + <i>V</i><sub>&phi;</sub>(<b>q</b>,
+      <i>H</i><sub>&phi;</sub> = <i>T</i><sub>&phi;</sub>(<b>p</b>) + <i>V</i><sub>&phi;</sub>(<b>q</b>,
       <b><i>u</i></b>), with the action entering the potential, and is applied <i>K</i> times to its own
       outputs. <b>Middle:</b> each prediction (<b>q&#771;</b><sub>t+k</sub>, <b>p&#771;</b><sub>t+k</sub>) is
       scored by the prediction loss (C) against the encoding of the corresponding frames, shown here for the
       last step <i>k</i>=<i>K</i>. The regularizer (R) acts on the encoder's embeddings of <b>q</b> (blue) and
       <b>p</b> (orange). <b>Right:</b> the encoder block as instantiated in this work: a pixel encoder (Enc)
       outputs <b>q</b><sub>t</sub>, and a fixed Savitzky&ndash;Golay stencil (SG) derives <b>p</b><sub>t</sub>
-      from <b>q</b><sub>t&minus;3</sub>, &hellip;, <b>q</b><sub>t</sub>.</figcaption>
+      from <b>q</b><sub>t&minus;3</sub>, &hellip;, <b>q</b><sub>t</sub>. The drawing writes the kinetic term <i>T</i> as
+      K.</figcaption>
   </figure>
   <p>
     <b>The integration.</b> We leverage the leapfrog (St&ouml;rmer&ndash;Verlet) integrator, which is
     second-order accurate and, crucially, exactly symplectic. For a separable Hamiltonian
-    <i>H</i><sub>&phi;</sub>(<b>q</b>, <b>p</b>, <b><i>u</i></b>) = <i>K</i><sub>&phi;</sub>(<b>S</b><sup>&minus;1</sup><b>p</b>)
+    <i>H</i><sub>&phi;</sub>(<b>q</b>, <b>p</b>, <b><i>u</i></b>) = <i>T</i><sub>&phi;</sub>(<b>S</b><sup>&minus;1</sup><b>p</b>)
     + <i>V</i><sub>&phi;</sub>(<b>q</b>, <b><i>u</i></b>), with <b>S</b> = diag(e<sup>&sigma;</sup>), the update
     over a time step &Delta;<i>t</i> is
   </p>
   <div class="eq">
     <b>p&#771;</b><sub>t+&frac12;</sub> = <b>p</b><sub>t</sub> &minus; (&Delta;<i>t</i>/2) &nabla;<sub><b>q</b></sub><i>V</i><sub>&phi;</sub>(<b>q</b><sub>t</sub>, <b><i>u</i></b><sub>t</sub>)<br>
-    <b>q&#771;</b><sub>t+1</sub> = <b>q</b><sub>t</sub> + &Delta;<i>t</i> <b>S</b><sup>&minus;1</sup> &nabla;<i>K</i><sub>&phi;</sub>(<b>S</b><sup>&minus;1</sup><b>p&#771;</b><sub>t+&frac12;</sub>)<br>
+    <b>q&#771;</b><sub>t+1</sub> = <b>q</b><sub>t</sub> + &Delta;<i>t</i> <b>S</b><sup>&minus;1</sup> &nabla;<i>T</i><sub>&phi;</sub>(<b>S</b><sup>&minus;1</sup><b>p&#771;</b><sub>t+&frac12;</sub>)<br>
     <b>p&#771;</b><sub>t+1</sub> = <b>p&#771;</b><sub>t+&frac12;</sub> &minus; (&Delta;<i>t</i>/2) &nabla;<sub><b>q</b></sub><i>V</i><sub>&phi;</sub>(<b>q&#771;</b><sub>t+1</sub>, <b><i>u</i></b><sub>t</sub>)
   </div>
   <p>
     where &sigma; is learned and absorbs the relative scale of <b>q</b> and <b>p</b>, which the self-supervised
     objective leaves undetermined. Because <b>S</b> is a constant linear rescaling, the flow remains exactly
     symplectic.
+  </p>
+  <p>
+    The guarantee is not specific to separable <i>H</i>: for a non-separable Hamiltonian, exact symplecticity is
+    retained by replacing leapfrog with a non-separable symplectic integrator.
   </p>
   <p>
     <b>Action-conditioned Hamiltonian.</b> Under actuation the controller does work and
@@ -335,7 +351,9 @@
     computing <b>p</b> as the temporal derivative of the generalized coordinates <b>q</b> via a fixed
     Savitzky&ndash;Golay stencil on the encoder trajectory: a least-squares quadratic fit over <b>q</b> that is
     then differentiated at time step <i>t</i>. The stencil is linear with constant coefficients, so it adds no
-    learned parameters and cannot itself collapse.
+    learned parameters and cannot itself collapse. Computing <b>p</b> as d<b>q</b>/d<i>t</i> assumes unit mass. A
+    mass that is constant within an episode, possibly different between episodes, is absorbed by the encoder through
+    a stretched coordinate; a mass that depends on the configuration is not, and the cart pole tests that case.
   </p>
   <p>
     <b>Multi-step learning.</b> We consider multi-step prediction over a <i>K</i>-step horizon by iteratively
@@ -351,7 +369,8 @@
   <p>
     where the first term is the prediction loss in the position-like embedding, the second is the prediction
     loss in the momentum-like embedding weighted by &lambda;<sub>p</sub>, and the last term <i>S</i> is the
-    regularizer, which in principle can be any (e.g., SIGReg) and acts on ground-truth embeddings, never on the
+    regularizer, which, in principle, can be any (e.g., SIGReg) and it can be applied to <b>q</b> and <b>p</b>
+    independently, to only <b>q</b>, or to both concatenated. It acts on ground-truth embeddings, never on the
     rollout.
   </p>
 </section>
@@ -359,111 +378,184 @@
 <section id="envs">
   <h2>Empirical validation of <b class="nm">LeHami</b></h2>
   <p>
-    We evaluate our approach on two pendulum environments rendered as 64&times;64 RGB images. In the
+    We evaluate our approach on five environments rendered as 64&times;64 RGB images. In the
     conservative pendulum there is no actuation, and episodes vary across three rod lengths. In the actuated
     pendulum, a recorded sequence of scalar torques (<i>u</i><sub>t</sub>)<sub>t</sub>, drawn uniformly, does
     work on the system, so energy is no longer conserved; episodes vary across the same three rod lengths and
-    three masses, since under actuation the mass sets the response to the torque. In both environments the true
+    three masses, since under actuation the mass sets the response to the torque. In both pendulums the true
     dynamics preserve phase-space volume, which is the property <b class="nm">LeHami</b> builds in; the actuated pendulum tests it
     once energy conservation no longer holds.
   </p>
+  <p>
+    To test beyond the pendulum, we add the mass-spring and the two-body system of the
+    <a href="https://github.com/google-deepmind/dm_hamiltonian_dynamics_suite">DeepMind Hamiltonian Dynamics Suite</a>,
+    and a cart pole with <a href="https://arxiv.org/abs/2407.17032">Gymnasium</a>'s physics and no force. The cart pole
+    has two degrees of freedom and a mass that depends on the pole angle, so it breaks the unit-mass assumption.
+  </p>
   <figure>
     <img src="assets/datasets_strip_pendula.png" alt="Frames of the conservative and actuated pendulum with the applied torque below each row" loading="lazy">
-    <figcaption>One episode of each environment. The actuated torque (bottom) is held for three frames;
+    <figcaption>One episode of each pendulum environment. The actuated torque (bottom) is held for three frames;
       the conservative pendulum has <b><i>u</i></b><sub>t</sub> &equiv; 0.</figcaption>
   </figure>
+  <p>
+    <b>Same-state controls.</b> To separate the Hamiltonian step from the augmented state, we keep <b class="nm">LeHami</b>'s encoder,
+    state [<b>q</b>, SG(<b>q</b>)], losses, regularizer and 8-step training rollout, and replace only the predictor:
+    by an MLP with the same number of parameters as <b class="nm">LeHami</b>'s flow, and by the transformer of LeWM (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>). LeWM with its own
+    state, from one frame or three, is compared as well. Results are over three training seeds, next to two baselines
+    that use no model: repeat the start, and predict the mean.
+  </p>
 </section>
 
 <section id="results">
   <h2>Results</h2>
 
-  <h3>Long-horizon prediction and latent volume</h3>
+  <h3>Rollout collapse, measured on the data</h3>
   <p>
-    On the conservative pendulum, the angle predictions of the two models are level early and <b class="nm">LeHami</b> pulls ahead
-    from <i>K</i>&nbsp;&approx;&nbsp;11 on. Regarding the prediction of velocity, the middle panel shows that
-    <b class="nm">LeHami</b> leads by <b>2.8&times;</b> over the first ten steps and <b>1.3&times;</b> at the end of the horizon,
-    that is, its velocity error is 2.8&times; smaller than that of the baseline LeWM
-    (<a href="https://arxiv.org/abs/2603.19312">Maes et al., 2026</a>) over the first ten rollout steps.
+    The guarantee holds over the whole latent space, for any learned <i>H</i><sub>&phi;</sub>, trained or random. The data, however, lie on a
+    thin surface inside it, with as many dimensions as the physical state, and a map that keeps the total volume could
+    still squeeze that surface while stretching other directions. We therefore measure collapse on the data, with four
+    ratios of the rollout to the truth (the encoder's latents of the true frames at the same step). Each is 1 when the
+    rollout keeps the true geometry and below 1 when it contracts: the <b>distance between rollouts</b> started from
+    different frames; the <b>tangent area</b>, how much the rollout stretches a small patch of the data surface compared
+    with the true motion; the <b>spread</b> of the cloud of all rollout states; and its <b>effective rank</b>.
   </p>
-  <p>
-    To assess whether <b class="nm">LeHami</b> avoids representation collapse over long horizons, we directly evaluate the
-    phase-space volume contraction of the latent predictor during rollouts. The right panel tracks the
-    normalized <b>cumulative log-determinant</b> across a <i>K</i>-step rollout,
-    (1/<i>n</i>) &Sigma;<sub><i>i</i>=0..<i>K</i>&minus;1</sub> log|det <i>J</i>(<b>z</b><sub><i>i</i></sub>)|, where
-    <i>J</i>(<b>z</b><sub><i>i</i></sub>) denotes the Jacobian of the one-step predictor and <i>n</i> is the latent
-    dimension. This quantity directly measures phase-space volume change under iterated predictions.
-    <b class="nm">LeHami</b> maintains an exactly constant value of 0 (|det <i>J</i>(<b>z</b><sub><i>i</i></sub>)| = 1 for all
-    <b>z</b><sub><i>i</i></sub>), avoiding rollout volume contraction. Conversely, LeWM exhibits a steady linear
-    decline in cumulative log-volume, indicating continuous contraction during rollout; the same holds for the
-    full phase-space volume of its three-embedding context.
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr><th>Predictor</th><th>Cons. pendulum</th><th>Act. pendulum</th><th>Mass-spring</th><th>Two-body</th><th>Cart pole</th></tr>
+    </thead>
+    <tbody>
+      <tr class="lehami"><td><b class="nm">LeHami</b></td><td class="num">1.03 / 1.35 / 1.04 / 1.25</td><td class="num">1.00 / 1.04 / 1.01 / 1.21</td><td class="num">1.10 / 1.22 / 1.15 / 1.57</td><td class="num">1.50 / 0.94 / 1.59 / 0.83</td><td class="num">1.33 / 0.58 / 1.42 / 0.94</td></tr>
+      <tr><td>MLP, matched</td><td class="num">0.81 / 0.49 / 0.78 / 0.56</td><td class="num">0.91 / 0.68 / 0.90 / 0.84</td><td class="num">0.73 / 0.17 / 0.70 / 0.37</td><td class="num">0.85 / 0.75 / 0.85 / 0.94</td><td class="num">0.72 / 0.22 / 0.71 / 0.56</td></tr>
+      <tr><td>Transformer (LeWM's)</td><td class="num">0.86 / 0.62 / 0.83 / 0.70</td><td class="num">0.92 / 0.81 / 0.90 / 0.90</td><td class="num">0.83 / 0.37 / 0.80 / 0.59</td><td class="num">0.84 / 0.76 / 0.84 / 0.95</td><td class="num">0.63 / 0.20 / 0.64 / 0.61</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">
+    <b>Rollout collapse on the data, at the longest step.</b> Each cell gives four ratios of the rollout to the truth:
+    distance between rollouts / tangent area / spread / effective rank; 1 is right, below 1 the rollout contracts, above
+    1 it drifts. Mean over three seeds (largest s.d. 0.17). Steps <i>K</i>: 30 for the pendulums, 50 for the
+    mass-spring, 70 for two-body and the cart pole.
   </p>
-  <figure>
-    <img src="assets/physics_rollout.png" alt="Rollout error in angle and velocity, and cumulative log-volume, for LeHami and LeWM" loading="lazy">
-    <figcaption>
-      <span class="swatch" style="background:#1f8a7d"></span><b class="nm">LeHami</b>
-      <span class="swatch" style="background:#e0245e; margin-left:10px"></span>LeWM.
-      Left and middle: MAE of &theta; and &omega; over 45 test episodes (mean &plusmn; 1 s.d. over three seeds).
-      Right: cumulative log-volume of the one-step map.</figcaption>
-  </figure>
 
   <p>
-    The animation below shows where this curve comes from. A single latent state cannot collapse, since it
-    simply moves to another point; collapse means that many distinct states get merged. So at each rollout step
-    we take a small disc of nearby latent states around the current state (dashed circle) and apply the
-    one-step map to every point of it. Because the disc is small, the map acts on it through its Jacobian
-    <i>J</i>, which turns the disc into an ellipse (filled). The axes of the ellipse are the singular values
-    of <i>J</i>, and its area relative to the disc is |det <i>J</i>|, the product of those singular values. For
-    <b class="nm">LeHami</b>, |det <i>J</i>| = 1: the disc is stretched in one direction and squeezed in another, but its area
-    is preserved, so nearby states stay distinguishable. For LeWM, the smallest singular value is essentially
-    zero, so |det <i>J</i>| &approx; 0 and the disc is flattened onto a line at every step, merging distinct
-    states. The curve at the bottom accumulates log|det <i>J</i>| over the rollout, which is the same cumulative
-    log-volume as in the figure above. Values are averaged over 45 test episodes.
+    Both free predictors contract the rollout on every environment and on all four measures. <b class="nm">LeHami</b>'s rollouts never merge,
+    but they are not exact: past the 8 trained steps they drift (values above 1), and on two-body and the cart pole they
+    squeeze some directions while stretching others, keeping the total volume; their distance and spread stay above 1
+    there, so the rollouts move apart, not together. On the cart pole (tangent area 0.58) the mass depends on the pole
+    angle, so <b>p</b> = d<b>q</b>/d<i>t</i> is not the true momentum and the true motion does not keep volume in <b class="nm">LeHami</b>'s
+    coordinates, which a volume-preserving step cannot follow.
   </p>
-  <figure>
-    <img src="assets/gif_volume.gif" alt="A unit disc mapped to an ellipse of equal area by LeHami and to a flat line by LeWM, with cumulative log-volume below" loading="lazy">
-    <figcaption>The two directions drawn are the extreme ones of a 64-dimensional map for <b class="nm">LeHami</b> (192 for LeWM,
-      which sees three embeddings). Bottom: cumulative log-volume, the same quantity as in the figure above.</figcaption>
-  </figure>
-
-  <h3><b class="nm">LeHami</b> is a world model with time re-stepping and reversal</h3>
   <p>
-    <b class="nm">LeHami</b> is a world model that runs at any rate, and in either direction, because the Hamiltonian predictor
-    <i>H</i><sub>&phi;</sub> is a continuous-time vector field. We showcase this capability by holding the
-    learned <i>H</i><sub>&phi;</sub> fixed and integrating it at <i>s</i>&Delta;<i>t</i>, taking
-    1/<i>s</i> sub-steps per observed frame, and compare against a Runge&ndash;Kutta integration of the true ODE
-    from the same initial condition. Refining below the observation rate leaves the predicted trajectory
-    invariant (left); coarsening breaks it, as an explicit symplectic integrator leaves its stability band. The
-    same property makes the rollout reversible. The right panel shows the round-trip error of the latent state
-    after rolling <i>K</i> steps forward and back with &Delta;<i>t</i> &rarr; &minus;&Delta;<i>t</i>, which
-    stays below 10<sup>&minus;4</sup>&nbsp;%.
+    The gain needs the symplectic step. With the same <i>T</i>&nbsp;+&nbsp;<i>V</i> and an explicit Euler step, on the
+    conservative pendulum the rollouts expand (distance 1.71) and the angle error reaches chance by
+    <i>K</i>&nbsp;=&nbsp;30 (1.29 against 0.46&nbsp;rad).
+  </p>
+
+  <h3>Long-horizon prediction</h3>
+  <p>
+    On the conservative pendulum we compare <b class="nm">LeHami</b> with the two predictors given the same state, so only the step differs.
+    From <i>K</i>&nbsp;&approx;&nbsp;20 on they are no better than chance, while <b class="nm">LeHami</b> stays below it in angle up to
+    <i>K</i>&nbsp;=&nbsp;70; the right panel shows their rollouts contract. LeWM on its own state does not contract, yet
+    its error also grows: its predictions keep the true spread but lose track of the true state.
   </p>
   <figure>
-    <img src="assets/dt_and_reversal.png" alt="Error at integrator steps dt, dt/2, dt/4 and 2dt, and round-trip error versus number of steps" loading="lazy">
-    <figcaption><b>The learned flow behaves like a continuous-time vector field, and is approximately
-      reversible, showcased with the conservative pendulum. Left:</b> MAE of &theta; integrated with step sizes
-      never seen in training (to the ground truth from the integration of the ODE). The model is trained only at
-      &Delta;<i>t</i> = 0.1&nbsp;s; halving and quartering the step (2 and 4 sub-steps per frame, respectively)
-      traces the same trajectory, while doubling it breaks. <b>Right:</b> round-trip error after rolling
-      <i>K</i> steps out and back by sign flip &Delta;<i>t</i> &rarr; &minus;&Delta;<i>t</i> in the
-      <i>H</i><sub>&phi;</sub>.</figcaption>
+    <img src="assets/fig4_same_state.png" alt="Angle and velocity error along the rollout, and distance between rollouts, for LeHami and the MLP and transformer given the same state" loading="lazy">
+    <figcaption><b>Prediction performance during conservative pendulum rollouts.</b> MAE of &theta; (left) and &omega;
+      (middle) across the test rollout steps (<i>K</i>); shaded: s.d. over three seeds. All three models share the encoder
+      and the state [<b>q</b>, SG(<b>q</b>)]; only the predictor differs. Dotted: chance (the better of repeating the start
+      and predicting the mean). Right: median distance between rollouts started from different test frames, over the true
+      distance between the same frames (1, dotted, means no contraction). The two free predictors contract steadily;
+      <b class="nm">LeHami</b> does not.</figcaption>
+  </figure>
+  <p>
+    <b>Five environments.</b> Given the same state, <b class="nm">LeHami</b> is the most accurate of the three predictors in position on four
+    of five, and beats both baselines in position everywhere. In velocity, <b class="nm">LeHami</b> is the most accurate on the pendulums and
+    the mass-spring; on two-body and the cart pole the free predictors are as accurate or better.
+  </p>
+  <div class="tablewrap">
+  <table>
+    <thead>
+      <tr><th>Environment</th><th></th><th>LeHami</th><th>MLP, matched</th><th>Transformer (LeWM's)</th><th>Repeat the start</th><th>Predict the mean</th></tr>
+    </thead>
+    <tbody>
+      <tr class="group"><td rowspan="2">Cons. pendulum</td><td>position</td><td class="num"><b>0.779 &plusmn; 0.034</b></td><td class="num">1.310 &plusmn; 0.015</td><td class="num">1.313 &plusmn; 0.046</td><td class="num">1.259</td><td class="num">1.324</td></tr>
+      <tr><td>velocity</td><td class="num"><b>2.185 &plusmn; 0.227</b></td><td class="num">2.672 &plusmn; 0.085</td><td class="num">2.566 &plusmn; 0.144</td><td class="num">2.741</td><td class="num">2.499</td></tr>
+      <tr class="group"><td rowspan="2">Act. pendulum</td><td>position</td><td class="num"><b>0.908 &plusmn; 0.067</b></td><td class="num">1.073 &plusmn; 0.027</td><td class="num">1.076 &plusmn; 0.015</td><td class="num">1.186</td><td class="num">1.168</td></tr>
+      <tr><td>velocity</td><td class="num"><b>2.280 &plusmn; 0.206</b></td><td class="num">2.721 &plusmn; 0.033</td><td class="num">2.801 &plusmn; 0.086</td><td class="num">3.222</td><td class="num">2.541</td></tr>
+      <tr class="group"><td rowspan="2">Mass-spring</td><td>position</td><td class="num"><b>0.074 &plusmn; 0.016</b></td><td class="num">0.223 &plusmn; 0.005</td><td class="num">0.164 &plusmn; 0.018</td><td class="num">0.422</td><td class="num">0.336</td></tr>
+      <tr><td>velocity</td><td class="num"><b>0.086 &plusmn; 0.009</b></td><td class="num">0.254 &plusmn; 0.004</td><td class="num">0.201 &plusmn; 0.019</td><td class="num">0.436</td><td class="num">0.347</td></tr>
+      <tr class="group"><td rowspan="2">Two-body</td><td>position</td><td class="num">0.421 &plusmn; 0.047</td><td class="num"><b>0.148 &plusmn; 0.073</b></td><td class="num">0.183 &plusmn; 0.037</td><td class="num">2.502</td><td class="num">1.456</td></tr>
+      <tr><td>velocity</td><td class="num">0.112 &plusmn; 0.013</td><td class="num"><b>0.056 &plusmn; 0.034</b></td><td class="num">0.062 &plusmn; 0.019</td><td class="num">0.688</td><td class="num">0.423</td></tr>
+      <tr class="group"><td rowspan="2">Cart pole</td><td>position</td><td class="num"><b>1.041 &plusmn; 0.098</b></td><td class="num">1.190 &plusmn; 0.093</td><td class="num">1.104 &plusmn; 0.081</td><td class="num">2.276</td><td class="num">1.285</td></tr>
+      <tr><td>velocity</td><td class="num">2.314 &plusmn; 0.192</td><td class="num"><b>2.140 &plusmn; 0.101</b></td><td class="num">2.248 &plusmn; 0.299</td><td class="num">3.778</td><td class="num">2.409</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="note">
+    <b>Physical prediction at the longest step, five environments.</b> MAE of the position and the velocity read from the
+    rollout by the 25-NN probe, mean &plusmn; s.d. over three seeds. Pendulums: &theta; [rad], &omega; [rad/s],
+    <i>K</i>&nbsp;=&nbsp;70. Mass-spring: <i>q</i>, <i>p</i>, <i>K</i>&nbsp;=&nbsp;50. Two-body: position and velocity of
+    a body, <i>K</i>&nbsp;=&nbsp;70. Cart pole: &phi; [rad], d&phi;/d<i>t</i> [rad/s], <i>K</i>&nbsp;=&nbsp;70. Bold:
+    lowest of the three predictors given the same state. The last two columns use no model.
+  </p>
+
+  <p>
+    <b>Where it falls short.</b> LeWM with a three-frame state, fully learned, is more accurate on four of five; combining
+    it with a predictor that does not collapse is natural follow-up work. The gain depends on the horizon: at
+    <i>K</i>&nbsp;=&nbsp;10 the free predictors are more accurate on the actuated pendulum (angle 0.20 and 0.26 against
+    0.32&nbsp;rad) and the cart pole. Two-body is shown at 0.2&nbsp;s per frame; at the suite's 0.05&nbsp;s per frame
+    <b class="nm">LeHami</b> fails, since its 8 training steps cover 1 to 6&nbsp;% of an orbit, too little to learn the force.
+  </p>
+
+  <h3><b class="nm">LeHami</b> is a world model with time re-stepping and invertibility</h3>
+  <p>
+    <b class="nm">LeHami</b> runs at any rate, and in either direction, because <i>H</i><sub>&phi;</sub> is a continuous-time vector field. We showcase this
+    capability by holding the learned <i>H</i><sub>&phi;</sub> fixed and integrating it at <i>s</i>&Delta;<i>t</i>, taking 1/<i>s</i>
+    sub-steps per observed frame, and compare against a Runge&ndash;Kutta integration of the true ODE from the same initial
+    condition. Refining below the observation rate leaves the predicted trajectory invariant (left); coarsening breaks it,
+    as an explicit symplectic integrator leaves its stability band.
+  </p>
+  <p>
+    The same structure makes the step invertible given the action history: running it with
+    &Delta;<i>t</i> &rarr; &minus;&Delta;<i>t</i> and the recorded actions in reverse order undoes the rollout for any
+    learned <i>H</i><sub>&phi;</sub>, which we check in floating point as an implementation test (round-trip error below
+    10<sup>&minus;4</sup>&nbsp;% after 30 steps). What depends on the learned <i>H</i><sub>&phi;</sub> is whether the backward rollout lands on
+    the true past. From a mid-episode frame of a held-out episode, we run the step backward with the actions that drove
+    the earlier frames, and score it against the true earlier frames (right). On both pendulums the backward rollout
+    recovers the earlier angles as well as the forward one predicts the later ones, and both stay well below chance up to
+    20 steps, under actuation too. A free predictor has no backward step.
+  </p>
+  <figure>
+    <img src="assets/dt_and_backward.png" alt="Error at integrator steps dt, dt/2, dt/4 and 2dt, and angle error of forward and backward rollouts against chance" loading="lazy">
+    <figcaption><b>The learned flow behaves like a continuous-time vector field, and runs backward to the true past.
+      Left:</b> MAE of &theta; integrated with step sizes never seen in training (to the ground truth from the integration
+      of the ODE), conservative pendulum. The model is trained only at &Delta;<i>t</i> = 0.1&nbsp;s; halving and quartering
+      the step (2 and 4 sub-steps per frame, respectively) traces the same trajectory, while doubling it breaks.
+      <b>Right:</b> MAE of &theta; after <i>K</i> steps forward (solid) and backward with the recorded actions (dashed),
+      from mid-episode frames of held-out episodes, conservative (teal) and actuated (purple) pendulums; three seeds.
+      Dotted: chance.</figcaption>
   </figure>
 
   <figure>
     <img src="assets/gif_reversal.gif" alt="A latent trajectory run forward for 20 steps and then backward along the same path, with the pendulum state the latent corresponds to swinging out and then returning to its start" loading="lazy">
-    <figcaption><b>Time reversal in practice.</b> This is a replay of the model, not of the real system. The
+    <figcaption><b>The inverse step in practice.</b> This is the implementation test above: a replay of the model, not of the real system. The
       pendulum is conservative: there are no actions (<b><i>u</i></b>&nbsp;=&nbsp;0), so nothing is applied to make it go
       back. <b class="nm">LeHami</b> (EXP-067) is run 20 steps forward with +&Delta;t (blue), then 20 steps with the <i>same flow</i>
-      and the step size negated to &minus;&Delta;t (pink). Left: the pendulum state that the latent corresponds to,
+      and the step size negated to &minus;&Delta;t (gold). Left: the pendulum state that the latent corresponds to,
       which swings out and then returns to its start. Right: the latent (<b><i>q</i></b>, <b><i>p</i></b>) retraces its own path
       and lands back on the starting point to a relative distance of 2&times;10<sup>&minus;7</sup>.</figcaption>
   </figure>
 
-  <h3>Planning on the actuated pendulum</h3>
+  <h3><b class="nm">LeHami</b> can be used for planning</h3>
   <p>
     We plan at inference time by searching for an action sequence that brings the latent prediction at the
     horizon to the latent of a goal frame, using the cross-entropy method with model-predictive control. Goals
     are 30 steps ahead and contain a <i>position</i> clause, a <i>velocity</i> clause, or both. The budget is
     capped at 15 TFLOP per episode, so each model trades the cost of one solve against how often it replans.
+    <b class="nm">LeHami</b>'s predictor is cheaper per step, so within the budget it can replan more often. It does not yet reach goals
+    better: LeWM has the highest success on every clause, from one frame on the angle and from three frames with an untied
+    kernel on the velocity and on both. Planning backward from the goal could help close this gap.
   </p>
   <p>
     Both models decode the rod's mass and length along the whole rollout, so differences in planning do not come
@@ -520,24 +612,22 @@
 
   <h3>Conclusion</h3>
   <p>
-    We introduced <b class="nm">LeHami</b>, a world model architecture that rigorously preserves the geometric properties of
-    second-order physical systems. Its exact symplectic step provides structural guarantees: exact volume
-    preservation that provably eliminates some rollout collapse modes and continuous-time integration with
-    time-reversal. We have shown empirically on the conservative pendulum that <b class="nm">LeHami</b> preserves latent volume
-    along the rollout, whereas LeWM contracts it steadily, losing log-volume linearly with the horizon.
-    Consistent with this, <b class="nm">LeHami</b> predicts velocity better throughout and angle better at long horizons. With
-    actuation, LeWM reaches the goal angle more often, but it captures signed velocity only when its temporal
-    window is explicitly untied. <b class="nm">LeHami</b> instead captures the full state, angle and signed velocity alike, by
-    construction, paving the way towards velocity-constrained planning and FLOP-efficient replanning.
+    We introduced <b class="nm">LeHami</b>, a predictor for latent world models whose exact symplectic step preserves volume, which provably
+    eliminates some rollout collapse modes, and integrates in continuous time, invertibly given the action history. On five
+    environments and four measures taken on the data, with the same encoder and state, an MLP and a transformer predictor
+    contract long rollouts while <b class="nm">LeHami</b>'s do not merge, and <b class="nm">LeHami</b> is the most accurate of the three in position at long
+    horizons on four of five, but not at short horizons on two of five. Run backward with the recorded actions, it recovers
+    the true past.
   </p>
   <p>
-    <b>Limitations and future work.</b> First, while our latent architecture maintains exact volume
-    preservation under actuation, strongly dissipative physical systems (e.g., heavy friction) exhibit
-    phase-space volume contraction. Thus, extending <b class="nm">LeHami</b> to these regimes, e.g., via port-Hamiltonian
-    extensions, is a natural direction for future work. Second, <b class="nm">LeHami</b> specifically targets velocity-aware
-    tasks, whereas purely static pose tasks are served well by spatial-focused, unconstrained predictors.
-    Finally, replacing our zero-overhead SG stencil with a learned momentum-like embedding offers a clear path
-    to potentially improve performance without sacrificing long-horizon phase-space stability.
+    <b>Limitations and future work.</b> First, strongly dissipative systems (e.g., heavy friction) contract phase-space
+    volume, which a volume-preserving step cannot follow; port-Hamiltonian extensions are a natural direction for future
+    work. Our experiments use simulated video of physical systems; extending them to contact, real video, observation
+    noise, encoder error and complex actuation (e.g., LeWM's Push-T) is the next step. Second, our <i>H</i><sub>&phi;</sub> is separable with a
+    mass that is constant within an episode; on the cart pole, whose mass depends on the configuration, <b class="nm">LeHami</b> is less exact,
+    and on two-body at the suite's 0.05&nbsp;s per frame it fails. Third, the volume guarantee does not bound the error, and
+    planning does not beat LeWM yet. Finally, a learned momentum could combine a richer encoder's accuracy with rollouts
+    that do not collapse.
   </p>
 
 </section>
@@ -546,7 +636,7 @@
   <h2>Code and reproducing the paper</h2>
   <p>
     The repository contains the model, training and evaluation code, the dataset generators and one script
-    per block of the paper. Every figure and table is produced end to end by a single notebook from the
+    per block of the paper. The figures and tables are produced by the notebooks in <code>paper_figures/</code> from the
     frozen numbers in <code>paper_figures/data/</code>.
   </p>
 <pre><code>git clone https://github.com/rominay/LeHami
@@ -561,7 +651,7 @@ bash lehami/experiments/conservative_multi_rod.sh</code></pre>
   <h2>Citation</h2>
   <!-- Update the entry (venue) if the paper is published. -->
 <pre><code>@misc{yalovetzky2026lehami,
-  title  = {LeHami: Symplectic Latent Dynamics for World Models},
+  title  = {LeHami: Symplectic Latent Dynamics Toward Long-Horizon Rollouts in World Models},
   author = {Yalovetzky, Romina and Balestriero, Randall and LeCun, Yann},
   year   = {2026},
   eprint = {2610.15267},
